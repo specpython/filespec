@@ -1,0 +1,5 @@
+*.pyc
+specpython/*.pyc
+build
+lib
+MANIFEST

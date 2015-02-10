@@ -2,14 +2,14 @@ from distutils.core import setup
 
 files = ["*.py"]
 
-setup(name="filespec",
+setup(name="specpython",
    version = "1.0",
    description = "python module to access spec data files",
    author = "Bixente Rey Bakaikoa",
    author_email = "txo@txolutions.com",
    url = "http://www.certif.com",
-   packages = ['src'],
-   package_data = {'src': files},  
+   packages = ['specpython'],
+   package_data = {'specpython': files},  
    scripts = {"specfile"}, 
    long_description = """
 This module gives full access to scans recorded in files writing with the spec file format.
@@ -26,5 +26,5 @@ specialized in instrument control and data acquisition in X-Ray diffraction expe
 and it is largely used and many synchrotrons, universities and laboratories around the
 world.
 """
-
 )
+

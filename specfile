@@ -20,7 +20,7 @@ To check the definition of the spec data file format check `certif.com`_
 
 version = "1.0"
 
-from filespec import FileSpec
+from specpython.filespec import FileSpec
 
 import os, sys, getopt
 
