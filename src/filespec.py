@@ -113,7 +113,7 @@ class FileSpec(list):
        return time.asctime( time.localtime( mtime ))
 
    def getNumberScans(self):
-       return len(self.scans)
+       return len(self)
 
    def getNumberHeaders(self):
        return len(self.headers)
