@@ -113,7 +113,7 @@ class FileSpec(list):
        return time.asctime( time.localtime( mtime ))
 
    def getNumberScans(self):
-       return len(self)
+       return len(self.scans)
 
    def getNumberHeaders(self):
        return len(self.headers)
@@ -171,7 +171,7 @@ class FileSpec(list):
                if self.origfilename:
                    fb.setFileName( self.origfilename )
 
-           if sline:
+           if sline and fb:
                fb.addLine(sline)
 
            self.lastpos = self.fd.tell()
@@ -364,6 +364,9 @@ class FileBlock:
     def addLabelLine(self,content, keyval=None):
         if self._labels is None:
             self._labels = re.split("\s\s+",content)
+            if not self._columns:
+                # cope with no N line. get nb columns from _labels
+                self._columns = len(self._labels)
         else:
             pass
 
