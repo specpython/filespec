@@ -908,7 +908,7 @@ class McaData:
         self.calib = calib
 
     def getData(self):
-        channels = range(len(mcadata))
+        channels = range(len(self.data))
         if self.data:
             return numpy.array([channels, self.data], dtype=numpy.float).transpose()
         else:
