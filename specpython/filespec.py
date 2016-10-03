@@ -1,22 +1,45 @@
 #!/usr/bin/env python
+#******************************************************************************
+#
+#  %W%  %G% CSS
+#
+#  "splot" Release %R%
+#
+#  Copyright (c) 2013,2014,2015,2016
+#  by Certified Scientific Software.
+#  All rights reserved.
+#
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software ("splot") and associated documentation files (the
+#  "Software"), to deal in the Software without restriction, including
+#  without limitation the rights to use, copy, modify, merge, publish,
+#  distribute, sublicense, and/or sell copies of the Software, and to
+#  permit persons to whom the Software is furnished to do so, subject to
+#  the following conditions:
+#
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+#
+#  Neither the name of the copyright holder nor the names of its contributors
+#  may be used to endorse or promote products derived from this software
+#  without specific prior written permission.
+#
+#     * The software is provided "as is", without warranty of any   *
+#     * kind, express or implied, including but not limited to the  *
+#     * warranties of merchantability, fitness for a particular     *
+#     * purpose and noninfringement.  In no event shall the authors *
+#     * or copyright holders be liable for any claim, damages or    *
+#     * other liability, whether in an action of contract, tort     *
+#     * or otherwise, arising from, out of or in connection with    *
+#     * the software or the use of other dealings in the software.  *
+#
+#******************************************************************************
 
 """
 
 ****************
 filespec
 ****************
-
-License
-**************
-
-   filespec.py (c) 2014 Certified Scientific Software 
-
-   This file is distributed as free software: you can redistribute it and/or modify
-   it freely.
-
-   It is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
 
 Description
 ****************
@@ -42,162 +65,166 @@ import sys
 import time
 
 try:
-    from SPlotLogger import dprint
+    from CSSLogger import dprint
 except ImportError:
     dprint = str
 
 class FileSpec(list):
-   """
-   FileSpec class documentation
-   """
+    """
+    FileSpec class documentation
+    """
 
-   def __init__(self, filename):
+    def __init__(self, filename):
 
-       list.__init__(self)
+        list.__init__(self)
 
-       self.filename = filename
-       self.origfilename = None
-       self.headers  = []
-       self.lastpos  = 0
+        self.filename = filename
+        self.origfilename = None
+        self.headers = []
+        self.lastpos = 0
 
-       self.inheader = False
+        self.inheader = False
 
-       self.filestat = os.stat(self.filename)
-       self.st_size  = 0
+        self.filestat = os.stat(self.filename)
+        self.st_size = 0
 
-       self.scans    = {}     #  dictionary to hold references (by scan number) to the scanlist
+        # dictionary to hold references (by scan number) to the scanlist
+        self.scans = {}
 
-       self._indexscans()
+        self._indexscans()
 
-   def absolutePath(self):
-       return os.path.abspath(self.filename)
+    def absolutePath(self):
+        return os.path.abspath(self.filename)
 
-   def update(self):
+    def update(self):
 
-       currstat = os.stat(self.filename)
+        currstat = os.stat(self.filename)
 
-       if currstat.st_size > self.st_size:
-          self.st_size = currstat.st_size
-          self._indexscans()
-          modified = True
-       else:
-          modified = False
+        if currstat.st_size > self.st_size:
+            self.st_size = currstat.st_size
+            self._indexscans()
+            modified = True
+        else:
+            modified = False
 
-       return modified
+        return modified
 
-   def getScanByNumber(self, scanno, scanorder=0):
-       if scanno in self.scans: 
-            if scanorder >= 0 and scanorder < len( self.scans[scanno] ) :
-                 scan = self.scans[scanno][scanorder]
-                 return scan
-       else:
+    def getScanByNumber(self, scanno, scanorder=0):
+        if scanno in self.scans:
+            if scanorder >= 0 and scanorder < len(self.scans[scanno]):
+                scan = self.scans[scanno][scanorder]
+                return scan
+        else:
             return None
 
-   def getTimeCreated(self):
-       if self.headers:
-           return self.headers[0].getDate()
+    def getTimeCreated(self):
+        if self.headers:
+            return self.headers[0].getDate()
 
-   def getUser(self):
-       if self.headers:
-           return self.headers[0].getUser()
+    def getUser(self):
+        if self.headers:
+            return self.headers[0].getUser()
 
-   def getSpec(self):
-       if self.headers:
-           return self.headers[0].getSpec()
+    def getSpec(self):
+        if self.headers:
+            return self.headers[0].getSpec()
 
-   def getTimeModified(self):
-       if not self.filename:
+    def getTimeModified(self):
+        if not self.filename:
             return None
 
-       mtime = os.stat(self.filename).st_mtime
-       return time.asctime( time.localtime( mtime ))
+        mtime = os.stat(self.filename).st_mtime
+        return time.asctime(time.localtime(mtime))
 
-   def getNumberScans(self):
-       return len(self)
+    def getNumberScans(self):
+        return len(self.scans)
 
-   def getNumberHeaders(self):
-       return len(self.headers)
+    def getNumberHeaders(self):
+        return len(self.headers)
 
-   def getInfo(self):
-       """Returns user and application"""
-       ctime = self.getTimeCreated()
-       mtime = self.getTimeModified()
-       user = self.getUser()
-       spec = self.getSpec()
-       return [ctime,mtime,user,spec]
+    def getInfo(self):
+        """Returns user and application"""
+        ctime = self.getTimeCreated()
+        mtime = self.getTimeModified()
+        user = self.getUser()
+        spec = self.getSpec()
+        return [ctime, mtime, user, spec]
 
-   def _indexscans(self):
+    def _indexscans(self):
 
-       self.fd  = open(self.filename, "rb")
+        self.fd = open(self.filename, "rb")
 
-       if len(self) > 0:
-           fb = self[-1]
-           self.fd.seek( self.lastpos )
-       else:
-           fb = None
+        if len(self) > 0:
+            fb = self[-1]
+            self.fd.seek(self.lastpos)
+        else:
+            fb = None
 
-       line = self.fd.readline()
-       lineno = -1
+        line = self.fd.readline()
+        lineno = -1
 
-       while line:
-           lineno += 1
-           sline = line.strip()
+        while line:
+            lineno += 1
+            sline = line.strip()
 
-           if len(sline) >= 2 and sline[0] == "#" and sline[1] in ['S','F','E']:
+            if len(sline) >= 2 and sline[0] == "#" and sline[1] in ['S', 'F', 'E']:
 
-               btype      = sline[1]
-               blockstart = self.lastpos
-               blockline = lineno 
+                btype = sline[1]
+                blockstart = self.lastpos
+                blockline = lineno
 
-               if fb: fb.end()
+                if fb:
+                    fb.end()
 
-               if btype == 'F':
-                   self.origfilename = sline[2:].strip()
-                   fb = Header(blockstart, blockline)
-                   self.inheader = True
-                   self.headers.append(fb)
-               elif btype == 'E' and not self.inheader:
-                   fb = Header(blockstart, blockline)
-                   self.inheader = True
-                   self.headers.append(fb)
-               elif sline[1] == 'S':
-                   fb = Scan(blockstart, blockline)
-                   self.inheader = False
-                   self.append(fb)
-                   fb._setScanIndex( len(self) )
-                   if len(self.headers): 
-                       fb._setFileHeader( self.headers[-1] )  #  Assign last added header to current scan
+                if btype == 'F':
+                    self.origfilename = sline[2:].strip()
+                    fb = Header(blockstart, blockline)
+                    self.inheader = True
+                    self.headers.append(fb)
+                elif btype == 'E' and not self.inheader:
+                    fb = Header(blockstart, blockline)
+                    self.inheader = True
+                    self.headers.append(fb)
+                elif sline[1] == 'S':
+                    fb = Scan(blockstart, blockline)
+                    self.inheader = False
+                    self.append(fb)
+                    fb._setScanIndex(len(self))
+                    if len(self.headers):
+                        # Assign last added header to current scan
+                        fb._setFileHeader(self.headers[-1])
 
-               if self.origfilename:
-                   fb.setFileName( self.origfilename )
+                if self.origfilename:
+                    fb.setFileName(self.origfilename)
 
-           if sline:
-               fb.addLine(sline)
+            if sline and fb:
+                fb.addLine(sline)
 
-           self.lastpos = self.fd.tell()
+            self.lastpos = self.fd.tell()
 
-           line = self.fd.readline()
+            line = self.fd.readline()
 
-       # register last block
-       fb.end()
+        # register last block
+        fb.end()
 
-       # correct the scan order if necessary 
-       # assign number in file
+        # correct the scan order if necessary
+        # assign number in file
 
-       self.scans = {}
-       scanidx = 0
+        self.scans = {}
+        scanidx = 0
 
-       for scan in self:
-          scanno = scan.getNumber()
-          if scanno not in self.scans:
-             self.scans[scanno] = []
+        for scan in self:
+            scanno = scan.getNumber()
+            if scanno not in self.scans:
+                self.scans[scanno] = []
 
-          self.scans[scanno].append( scan )
-          scan._setOrder( len(self.scans[scanno]) - 1 )
-          scan._setNumberInFile(scanidx)
-          scanidx += 1
+            self.scans[scanno].append(scan)
+            scan._setOrder(len(self.scans[scanno]) - 1)
+            scan._setNumberInFile(scanidx)
+            scanidx += 1
 
-       self.fd.close()
+        self.fd.close()
+
 
 class FileBlock:
 
@@ -205,9 +232,9 @@ class FileBlock:
 
     def __init__(self, start, firstline):
 
-        self.start  = start
-        self.firstline  = firstline
-        self.lines  = []
+        self.start = start
+        self.firstline = firstline
+        self.lines = []
         self._filename = None
         self._contains_error = False
         self._error_messages = []
@@ -239,8 +266,8 @@ class FileBlock:
         # Default
         self.is_parsed = False
 
-        self._data  = []
-        self._mcas  = []
+        self._data = []
+        self._mcas = []
 
         self._number = 0
         self._command = ""
@@ -250,8 +277,8 @@ class FileBlock:
         self._date = ""
         self._columns = 0
         self._labels = None
-        self._motor_labels =  []
-        self._motor_mnes =  []
+        self._motor_labels = []
+        self._motor_mnes = []
         self._counter_labels = []
         self._counter_mnes = []
         self._motor_positions = []
@@ -282,18 +309,19 @@ class FileBlock:
                 continue
 
             if len(sline) > 1 and sline[0] == "#":
-                  widx = sline.find(" ")
-                  if widx < 2:
-                     continue  
-            
-                  metakey = sline[1]
-                  metaval = sline[2:widx].strip()
-                  content = sline[widx:].strip()
+                widx = sline.find(" ")
+                if widx < 2:
+                    continue
 
-                  if metakey in self.funcs:
-                      self.funcs[metakey]( content.strip(), metaval )
-                  else:
-                      self.wrongLine(lineno, sline, "unknown header line (%s) " % metakey )
+                metakey = sline[1]
+                metaval = sline[2:widx].strip()
+                content = sline[widx:].strip()
+
+                if metakey in self.funcs:
+                    self.funcs[metakey](content.strip(), metaval)
+                else:
+                    self.wrongLine(
+                        lineno, sline, "unknown header line (%s) " % metakey)
             else:
                 # TODO:  handle MCA blocks
                 # for now we work only with normal data lines
@@ -304,24 +332,25 @@ class FileBlock:
                     self.tmpmca = McaData()
 
                 if self.reading_mca:
-                    complete = self.tmpmca._addLine( sline ) 
+                    complete = self.tmpmca._addLine(sline)
                     if complete:
-                        self._mcas.append( self.tmpmca )
+                        self._mcas.append(self.tmpmca)
                         self.reading_mca = False
                 else:
                     try:
                         try:
                             dataline = map(float, sline.strip().split())
                         except:
-                            self.wrongLine(lineno, sline, "wrong data line" )
+                            self.wrongLine(lineno, sline, "wrong data line")
                             continue
 
                         if len(dataline) != self._columns:
-                            self.wrongLine(lineno, sline, "wrong number of columns" )
+                            self.wrongLine(
+                                lineno, sline, "wrong number of columns")
                         else:
-                            self._data.append( dataline )
+                            self._data.append(dataline)
                     except ValueError:
-                        self.wrongLine(lineno, sline, "cannot parse line " )
+                        self.wrongLine(lineno, sline, "cannot parse line ")
 
         self.is_parsed = True
         self.finalizeParsing()
@@ -330,68 +359,71 @@ class FileBlock:
         pass
 
     def wrongLine(self, lineno, sline, errmsg):
-        self._wrong_lines.append( [errmsg, sline] )
-        line = "%s (%s)" % (lineno+1, self.firstline+lineno+1)
+        self._wrong_lines.append([errmsg, sline])
+        line = "%s (%s)" % (lineno + 1, self.firstline + lineno + 1)
         ermsg = "erroneous data / %s " % errmsg
-        self._error_messages.append( [self._id, line, ermsg] )
+        self._error_messages.append([self._id, line, ermsg])
         self._contains_error = True
 
     def setFileName(self, filename):
         self._filename = filename
 
-    def addSLine(self, content, keyval=None ):
+    def addSLine(self, content, keyval=None):
         # Scan line is scannumber and command
-        vals = content.split()  
-        self._number  = int(vals[0])
+        vals = content.split()
+        self._number = int(vals[0])
         self._id = self._number
-        self._command = " ".join( vals[1:] )
+        self._command = " ".join(vals[1:])
 
-    def addFileLine(self,content, keyval=None):
+    def addFileLine(self, content, keyval=None):
         self._filename = content
 
-    def addEpochLine(self,content, keyval=None):
-        self._epoch    = int(content)
+    def addEpochLine(self, content, keyval=None):
+        self._epoch = int(content)
 
-    def addDateLine(self,content, keyval=None):
-        self._date    = content
+    def addDateLine(self, content, keyval=None):
+        self._date = content
 
-    def addColumnsLine(self,content, keyval=None):
+    def addColumnsLine(self, content, keyval=None):
         if not self._columns:
             self._columns = int(content)
         else:
             pass
 
-    def addLabelLine(self,content, keyval=None):
+    def addLabelLine(self, content, keyval=None):
         if self._labels is None:
-            self._labels = re.split("\s\s+",content)
+            self._labels = re.split("\s\s+", content)
+            if not self._columns:
+                # cope with no N line. get nb columns from _labels
+                self._columns = len(self._labels)
         else:
             pass
 
-    def addMotorLabelLine(self,content, keyval=None):
+    def addMotorLabelLine(self, content, keyval=None):
         # Beware of double spacing
-        self._motor_labels.extend( re.split("\s\s+", content) )
+        self._motor_labels.extend(re.split("\s\s+", content))
 
-    def addMotorMneLine(self,content, keyval=None):
-        self._motor_mnes.extend( re.split("\s", content) )
+    def addMotorMneLine(self, content, keyval=None):
+        self._motor_mnes.extend(re.split("\s", content))
 
-    def addCounterLabelLine(self,content, keyval=None):
+    def addCounterLabelLine(self, content, keyval=None):
         # Beware of double spacing
-        self._counter_labels.extend( re.split("\s\s+", content) )
+        self._counter_labels.extend(re.split("\s\s+", content))
 
-    def addCounterMneLine(self,content, keyval=None):
+    def addCounterMneLine(self, content, keyval=None):
         # Beware of double spacing
-        self._counter_mnes.extend( re.split("\s", content) )
+        self._counter_mnes.extend(re.split("\s", content))
 
-    def addMotorPositionLine(self,content, keyval=None):
+    def addMotorPositionLine(self, content, keyval=None):
         self._motor_positions.extend(content.split(" "))
 
-    def addUserLine(self,content, keyval=None):
-        self._user_lines.append( content )
+    def addUserLine(self, content, keyval=None):
+        self._user_lines.append(content)
 
-    def addCommentLine(self,content, keyval=None):
-        self._comment_lines.append( content )
+    def addCommentLine(self, content, keyval=None):
+        self._comment_lines.append(content)
 
-    def addTimeLine(self,content, keyval=None):
+    def addTimeLine(self, content, keyval=None):
         parts = content.split()
         if len(parts) > 1:
             units = re.sub("[\)\(]", "", parts[1])
@@ -399,21 +431,21 @@ class FileBlock:
         else:
             self._count_time = [content, ""]
 
-    def addGeoLine(self,content, keyval=None):
-        self._geo_pars.append( content.split() )
+    def addGeoLine(self, content, keyval=None):
+        self._geo_pars.append(content.split())
 
-    def addQLine(self,content, keyval=None):
+    def addQLine(self, content, keyval=None):
         self._qvalue = content
 
-    def addExtraLine(self,content, keyval=None):
-        self._extra_lines.append( [keyval, content] )
-   
+    def addExtraLine(self, content, keyval=None):
+        self._extra_lines.append([keyval, content])
+
     def getDate(self):
         """
         Returns the date when the scan was started
         """
         if not self.is_parsed:
-           self.parse()
+            self.parse()
         return self._date
 
     def getUserSpec(self):
@@ -421,19 +453,19 @@ class FileBlock:
         comments = self._comment_lines
 
         if comments:
-           for line in comments:
-              mat = self.respecuser.search( line )
-              if mat:
-                 return [ mat.group("user"), mat.group("spec") ]
+            for line in comments:
+                mat = self.respecuser.search(line)
+                if mat:
+                    return [mat.group("user"), mat.group("spec")]
 
-        return "" 
+        return ""
 
     def getSpec(self):
         """
         Returns the name of the spec application from which the file was created
         """
         if not self.is_parsed:
-           self.parse()
+            self.parse()
 
         return self.getUserSpec()[1]
 
@@ -442,7 +474,7 @@ class FileBlock:
         Returns the name of the unix user that created the file 
         """
         if not self.is_parsed:
-           self.parse()
+            self.parse()
 
         return self.getUserSpec()[0]
 
@@ -451,11 +483,13 @@ class Header(FileBlock):
     """ 
     Class representing a file header.
     """
+
     def __init__(self, start, firstline):
         FileBlock.__init__(self, start, firstline)
 
     def end(self):
         self.parse()
+
 
 class Scan(FileBlock):
     """
@@ -466,7 +500,7 @@ class Scan(FileBlock):
         FileBlock.__init__(self, start, firstline)
         self._fileheader = None
         self._numberinfile = -1
-        self._order      = 1
+        self._order = 1
 
     def end(self):
         self.resetParsedData()
@@ -475,28 +509,28 @@ class Scan(FileBlock):
 
         # prepare motor positions
         labels = self.getMotorNames()
-        poss   = self._motor_positions
+        poss = self._motor_positions
         poserr = False
         self.motor_positions_list = None
-        
+
         if not labels:
             ermsg = "no motor names"
-            self._error_messages.append( [self._id, "", ermsg] )
+            self._error_messages.append([self._id, "", ermsg])
             self._contains_error = True
             poserr = True
 
         elif len(labels) != len(poss):
-            ermsg = "number of motor labels and positions are different" 
-            self._error_messages.append( [self._id, "", ermsg] )
+            ermsg = "number of motor labels and positions are different"
+            self._error_messages.append([self._id, "", ermsg])
             self._contains_error = True
             poserr = True
 
         if not poserr:
-            self.motor_positions_list = zip( labels, poss )
+            self.motor_positions_list = list(zip(labels, poss))
 
     def _setFileHeader(self, header):
         self._fileheader = header
- 
+
     def _setScanIndex(self, idx):
         self._index = idx
 
@@ -514,7 +548,7 @@ class Scan(FileBlock):
         to the scan at the time it was executed.  
         """
         if not self.is_parsed:
-           self.parse()
+            self.parse()
         return self._number
 
     def getOrder(self):
@@ -524,7 +558,7 @@ class Scan(FileBlock):
         uses the same number, it will be associated with order 2 and so on.
         """
         return self._order
-        
+
     def _setNumberInFile(self, number):
         self._numberinfile = number
 
@@ -542,7 +576,7 @@ class Scan(FileBlock):
         Returns number of columns from scan header
         """
         if not self.is_parsed:
-           self.parse()
+            self.parse()
         return self._columns
 
     def getLabels(self):
@@ -550,23 +584,23 @@ class Scan(FileBlock):
         Returns the labels for the data columns 
         """
         if not self.is_parsed:
-           self.parse()
+            self.parse()
         return self._labels
-        
+
     def getCommand(self):
         """
         Returns a string containing the command that was run in spec to start the scan
         """
         if not self.is_parsed:
-           self.parse()
+            self.parse()
         return self._command
-        
+
     def getMotorNames(self):
         """
         Returns a list with motor names
         """
         if not self.is_parsed:
-           self.parse()
+            self.parse()
 
         if self._motor_labels:
             return self._motor_labels
@@ -580,7 +614,7 @@ class Scan(FileBlock):
         Returns a list with motor mnemonics. Motor mnemonics are saved in files only since spec version 6.0.10
         """
         if not self.is_parsed:
-           self.parse()
+            self.parse()
 
         if self._motor_mnes:
             return self._motor_mnes
@@ -594,7 +628,7 @@ class Scan(FileBlock):
         Returns a list with counter names. Counter names are saved in files only since spec version 6.0.10
         """
         if not self.is_parsed:
-           self.parse()
+            self.parse()
 
         if self._counter_labels:
             return self._counter_labels
@@ -608,7 +642,7 @@ class Scan(FileBlock):
         Returns a list with counter mnemonics. Counter mnemonics are saved in files only since spec version 6.0.10
         """
         if not self.is_parsed:
-           self.parse()
+            self.parse()
 
         if self._counter_mnes:
             return self._counter_mnes
@@ -622,7 +656,7 @@ class Scan(FileBlock):
         Returns a dictionary with motor names and positions. These are the positions of the motors when the scan was started
         """
         if not self.is_parsed:
-           self.parse()
+            self.parse()
 
         return self.motor_positions_list
 
@@ -633,14 +667,13 @@ class Scan(FileBlock):
     def getSpec(self):
         if self._fileheader:
             return self._fileheader.getSpec()
-        
 
     def getDate(self):
         """
         Returns the date when the scan was started
         """
         if not self.is_parsed:
-           self.parse()
+            self.parse()
         return self._date
 
     def getFileDate(self):
@@ -648,18 +681,18 @@ class Scan(FileBlock):
         Returns the date when the file was created
         """
         if self._fileheader:
-           return self._fileheader._date
-        else: 
-           return None
+            return self._fileheader._date
+        else:
+            return None
 
     def getSource(self):
         """
         Returns the path of the file as it appears in the file header
         """
         if self._fileheader:
-           if self._fileheader._filename:
-               return self._fileheader._filename
-        
+            if self._fileheader._filename:
+                return self._fileheader._filename
+
         return ""
 
     def getGeometry(self):
@@ -667,7 +700,7 @@ class Scan(FileBlock):
         Returns geometry values as saved in the file.  Check the spec documentation for the meaning of these values
         """
         if not self.is_parsed:
-           self.parse()
+            self.parse()
         return [' '.join(line) for line in self._geo_pars]
 
     def getHKL(self):
@@ -675,7 +708,7 @@ class Scan(FileBlock):
         Returns a list with HKL values at the beginning of the scan
         """
         if not self.is_parsed:
-           self.parse()
+            self.parse()
         return self._qvalue
 
     def getFileEpoch(self):
@@ -704,7 +737,7 @@ class Scan(FileBlock):
         if not self.is_parsed:
             self.parse()
         return self._comment_lines
-        
+
     def getUserLines(self):
         if not self.is_parsed:
             self.parse()
@@ -722,11 +755,11 @@ class Scan(FileBlock):
         if not self.is_parsed:
             self.parse()
         return [' '.join(line) for line in self._extra_lines]
-        
+
     def getMeta(self):
         """ 
         Returns a dictionary with the most relevant metdata information
-        """ 
+        """
         if not self.is_parsed:
             self.parse()
 
@@ -752,7 +785,7 @@ class Scan(FileBlock):
         meta["motors"] = self.getMotorPositions()
         meta["motnames"] = self.getMotorNames()
         meta["comments"] = self.getComments()
-        meta["order"]= self.getOrder()
+        meta["order"] = self.getOrder()
         meta["noinfile"] = self.getNumberInFile()
         meta["points"] = self.getLines()
         meta["columns"] = self.getColumns()
@@ -762,8 +795,8 @@ class Scan(FileBlock):
 
         motmnes = self.getMotorMnemonics()
         if motmnes:
-            meta["motmnes"]   = self.getMotorMnemonics()
-             
+            meta["motmnes"] = self.getMotorMnemonics()
+
         if self._contains_error:
             meta['errors'] = self._error_messages
 
@@ -772,57 +805,56 @@ class Scan(FileBlock):
     def getData(self):
         """ 
         Returns a numpy array with all data in the scan
-        """ 
+        """
         if not self.is_parsed:
-           self.parse()
+            self.parse()
 
         if self._data:
-            return numpy.array( self._data, dtype=numpy.float )
+            return numpy.array(self._data, dtype=numpy.float)
         else:
-            return numpy.empty((0,self._columns))
-
+            return numpy.empty((0, self._columns))
 
     def getNumberMcas(self):
         """ 
         Returns the number of mcas in the file
-        """ 
+        """
         if not self.is_parsed:
-           self.parse()
-        return len( self._mcas )
+            self.parse()
+        return len(self._mcas)
 
     def getMcas(self):
         """ 
         Returns a list of 1D numpy arrays in the scan, each of them being a spectrum from a 1D detector
-        """ 
+        """
         if not self.is_parsed:
-           self.parse()
-        return [ self._mcas[idx] for idx in range(len(self._mcas)) ]
+            self.parse()
+        return [self._mcas[idx] for idx in range(len(self._mcas))]
 
     def getMcaData(self, index):
         """ 
         Returns the data for spectrum with index "index" in the scan.
-        """ 
+        """
         if not self.is_parsed:
-           self.parse()
+            self.parse()
         if index < len(self._mcas):
-           return self._mcas[index].getData()
+            return self._mcas[index].getData()
 
     def _setOrder(self, order):
         self._order = order
 
     def __str__(self):
         if not self.is_parsed:
-           self.parse()
+            self.parse()
         if self._order > 1:
-            return "%s.%s %s" % (self._number, self._order, self._command )
+            return "%s.%s %s" % (self._number, self._order, self._command)
         else:
-            return "%s %s" % (self._number, self._command )
+            return "%s %s" % (self._number, self._command)
 
     def save(self, outfile, format="spec", append=False, columns=None, mcas=False):
         """ scan.save method produces a simple output meant to export scan data to 
 format readable by excel and other programs
 """
-   
+
         data = self.getData()
         meta = {}
 
@@ -830,65 +862,65 @@ format readable by excel and other programs
         meta['number'] = self.getNumber()
         meta['columns'] = data.shape[1]
 
-        dprint("saving scan (format=%s) to file %s" % (format, outfile) )
+        dprint("saving scan (format=%s) to file %s" % (format, outfile))
 
         if append:
-           ofd = open(outfile,"a") 
-        else: 
-           ofd = open(outfile,"w") 
+            ofd = open(outfile, "a")
+        else:
+            ofd = open(outfile, "w")
 
         if format == "tabs":
-           labsep = "\t"
-           datsep = "\t"
-           first = ""
+            labsep = "\t"
+            datsep = "\t"
+            first = ""
         elif format == "csv":
-           labsep = ","
-           datsep = ","
-           first = ""
+            labsep = ","
+            datsep = ","
+            first = ""
         elif format == "spec":
-           labsep = "  "
-           datsep = " "
-           first = """
+            labsep = "  "
+            datsep = " "
+            first = """
 #S %(number)s %(command)s
 #N %(columns)s
 #L """ % meta
-          
 
-        ofd.write( first + labsep.join( self.getLabels()) + "\n")
+        ofd.write(first + labsep.join(self.getLabels()) + "\n")
         for row in range(data.shape[0]):
-           outline = datsep.join( ["%.12g"%val for val in data[row] ]) + "\n"
-           ofd.write(outline)
+            outline = datsep.join(["%.12g" % val for val in data[row]]) + "\n"
+            ofd.write(outline)
         ofd.write("\n")
 
+
 class McaData:
-     """ 
-     The class MCA data represents 1D data
-     """
-     def __init__(self): 
-         self.data  = []
-         self.calib = None
+    """ 
+    The class MCA data represents 1D data
+    """
 
-     def getCalib(self):
-         return self.calib
+    def __init__(self):
+        self.data = []
+        self.calib = None
 
-     def setCalib(self, calib):
-         self.calib = calib
+    def getCalib(self):
+        return self.calib
 
-     def getData(self):
-         channels = range(len(mcadata))
-         if self.data:
-             return numpy.array( [channels, self.data], dtype=numpy.float ).transpose()
-         else:
-             return numpy.empty((0,1))
+    def setCalib(self, calib):
+        self.calib = calib
 
-     def _addLine(self, line):
-         if line.strip()[-1] ==  "\\":
+    def getData(self):
+        channels = range(len(mcadata))
+        if self.data:
+            return numpy.array([channels, self.data], dtype=numpy.float).transpose()
+        else:
+            return numpy.empty((0, 1))
+
+    def _addLine(self, line):
+        if line.strip()[-1] == "\\":
             dataline = line.strip()[:-1]
             complete = False
-         else:
+        else:
             dataline = line
             complete = True
 
-         self.data.extend( map(float, dataline.split() ))
-         return complete
-
+        self.data.extend(map(float, dataline.split()))
+        return complete
