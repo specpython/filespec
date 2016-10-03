@@ -84,10 +84,13 @@ The following are recognized header keys:
 'Q' - Q line
 
 '@' - Extra line
-   @MCA 
-   @CHANN 
-   @CTIME
-   @CALIB
+   @MCA     #  example #@MCA 16C  --  16 columns
+   @CHANN   #  example #@CHANN 8192 0 8191 1   -- 8192 total channels saving from 0 to 8191
+   @CTIME   #  example #@CTIME 10 9.8 10  --  <programmed> <live> <real>
+   @CALIB   #  example #@CALIB  1 3.5 0.2  -- A,B,C values of channel-energy calibration
+   @MCA_NB  #  example #@MCA_NB 2 -- two 1D detectors in every scan point (or in total)
+   @DET_%detno%  # example #@DET_0 Mythen1 -- Name of first detector
+   @ROI # example #@ROI Roi1 80 230 0 -- Roi name (must match counter name) start end det-no
 
 Data
 ++++
