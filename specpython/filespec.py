@@ -392,7 +392,7 @@ class FileBlock:
 
     def addLabelLine(self, content, keyval=None):
         if self._labels is None:
-            self._labels = re.split("\s\s+", content)
+            self._labels = re.split("\s\s+",content)
             if not self._columns:
                 # cope with no N line. get nb columns from _labels
                 self._columns = len(self._labels)
