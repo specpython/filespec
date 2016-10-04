@@ -267,7 +267,7 @@ class FileBlock:
         self.is_parsed = False
 
         self._data = []
-        self._oneds = []
+        self._oned_dets = []
 
         self._number = 0
         self._command = ""
@@ -332,13 +332,20 @@ class FileBlock:
                     sline = sline[2:]
                     self.reading_mca = True
                     if self._find_oned:
-                        self._oneds.append(OneD())
+                        self._oned_dets.append(OneDDetector())
+                        for extra_line in self._extra_lines:
+                            key = 'DET_%d' % oned_idx
+                            if key in extra_line:
+                                self._oned_dets[oned_idx].name = extra_line[1]
+                                break
+                        else:
+                            self._oned_dets[oned_idx].name = 'OneDDet_%d' % oned_idx
                     self.tmpmca = McaData()
 
                 if self.reading_mca:
                     complete = self.tmpmca._addLine(sline)
                     if complete:
-                        self._oneds[oned_idx].append(self.tmpmca)
+                        self._oned_dets[oned_idx].append(self.tmpmca)
                         self.reading_mca = False
                         oned_idx += 1
                 else:
@@ -829,7 +836,7 @@ class Scan(FileBlock):
         """
         if not self.is_parsed:
             self.parse()
-        return sum(map(len, self._oneds))
+        return sum(map(len, self._oned_dets))
 
     def getMcas(self):
         """ 
@@ -838,22 +845,22 @@ class Scan(FileBlock):
         if not self.is_parsed:
             self.parse()
         result = []
-        for mcas in self._oneds:
+        for mcas in self._oned_dets:
             result += mcas
         return result
 
-    def getNumberOneD(self):
+    def getOneDDetectorNames(self):
         """ 
-        Returns the number of OneD channels in the scan.
+        Returns the number of OneDDetector channels in the scan.
         """
         if not self.is_parsed:
             self.parse()
-        return len(self._oneds)
+        return [oned.name for oned in self._oned_dets]
 
-    def getOneD(self, idx):
+    def getOneDData(self, point_no, det_no=0):
         if not self.is_parsed:
             self.parse()
-        return self._oneds[idx]
+        return self._oned_dets[det_no][point_no]
 
     def _setOrder(self, order):
         self._order = order
@@ -942,11 +949,14 @@ class McaData:
         return complete
 
 
-class OneD(list):
+class OneDDetector(list):
     """
-    The class OneD is for the one dimension channels.
+    The class OneDDetector is for the one dimension channels.
     It has a list of McaData objects.
     """
+    def __init__(self):
+        list.__init__(self)
+        self.name = ''
 
     def getData(self):
         data = []
