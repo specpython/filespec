@@ -857,10 +857,15 @@ class Scan(FileBlock):
             self.parse()
         return [oned.name for oned in self._oned_dets]
 
-    def getOneDData(self, point_no, det_no=0):
+    def getOneDDetectorData(self, point_no, det_no=0):
         if not self.is_parsed:
             self.parse()
         return self._oned_dets[det_no][point_no]
+
+    def getOneDDetector(self, det_no):
+        if not self.is_parsed:
+            self.parse()
+        return self._oned_dets[det_no]
 
     def _setOrder(self, order):
         self._order = order
