@@ -267,7 +267,7 @@ class FileBlock:
         self.is_parsed = False
 
         self._data = []
-        self._mcas = []
+        self._oneds = []
 
         self._number = 0
         self._command = ""
@@ -290,7 +290,7 @@ class FileBlock:
         self._wrong_lines = []
         self._error_messages = []
         self._contains_error = False
-
+        self._find_oned = True
         self.reading_mca = False
 
     def addLine(self, line):
@@ -302,7 +302,9 @@ class FileBlock:
     def parse(self):
 
         lineno = -1
-
+        oned_idx = 0
+        data_line = 0
+        comp_line = 2  # The mca data is between 2 data counter lines.
         for sline in self.lines:
             lineno += 1
             if not sline:
@@ -323,20 +325,24 @@ class FileBlock:
                     self.wrongLine(
                         lineno, sline, "unknown header line (%s) " % metakey)
             else:
-                # TODO:  handle MCA blocks
-                # for now we work only with normal data lines
-
+                data_line += 1
                 if sline[0:2] == '@A':
+                    if data_line == 1:
+                        comp_line = 1  # The mca data is the first line.
                     sline = sline[2:]
                     self.reading_mca = True
+                    if self._find_oned:
+                        self._oneds.append(OneD())
                     self.tmpmca = McaData()
 
                 if self.reading_mca:
                     complete = self.tmpmca._addLine(sline)
                     if complete:
-                        self._mcas.append(self.tmpmca)
+                        self._oneds[oned_idx].append(self.tmpmca)
                         self.reading_mca = False
+                        oned_idx += 1
                 else:
+                    oned_idx = 0
                     try:
                         try:
                             dataline = map(float, sline.strip().split())
@@ -349,8 +355,11 @@ class FileBlock:
                                 lineno, sline, "wrong number of columns")
                         else:
                             self._data.append(dataline)
+                            if len(self._data) == comp_line:
+                                self._find_oned = False
                     except ValueError:
                         self.wrongLine(lineno, sline, "cannot parse line ")
+
 
         self.is_parsed = True
         self.finalizeParsing()
@@ -816,11 +825,11 @@ class Scan(FileBlock):
 
     def getNumberMcas(self):
         """ 
-        Returns the number of mcas in the file
+        Returns the number of mcas in the scan
         """
         if not self.is_parsed:
             self.parse()
-        return len(self._mcas)
+        return sum(map(len, self._oneds))
 
     def getMcas(self):
         """ 
@@ -828,16 +837,23 @@ class Scan(FileBlock):
         """
         if not self.is_parsed:
             self.parse()
-        return [self._mcas[idx] for idx in range(len(self._mcas))]
+        result = []
+        for mcas in self._oneds:
+            result += mcas
+        return result
 
-    def getMcaData(self, index):
+    def getNumberOneD(self):
         """ 
-        Returns the data for spectrum with index "index" in the scan.
+        Returns the number of OneD channels in the scan.
         """
         if not self.is_parsed:
             self.parse()
-        if index < len(self._mcas):
-            return self._mcas[index].getData()
+        return len(self._oneds)
+
+    def getOneD(self, idx):
+        if not self.is_parsed:
+            self.parse()
+        return self._oneds[idx]
 
     def _setOrder(self, order):
         self._order = order
@@ -908,7 +924,7 @@ class McaData:
         self.calib = calib
 
     def getData(self):
-        channels = range(len(mcadata))
+        channels = range(len(self.data))
         if self.data:
             return numpy.array([channels, self.data], dtype=numpy.float).transpose()
         else:
@@ -924,3 +940,19 @@ class McaData:
 
         self.data.extend(map(float, dataline.split()))
         return complete
+
+
+class OneD(list):
+    """
+    The class OneD is for the one dimension channels.
+    It has a list of McaData objects.
+    """
+
+    def getData(self):
+        data = []
+        for mcadata in self:
+            raw_data = mcadata.getData().transpose()[1].tolist()
+            data.append(raw_data)
+        return numpy.array(data, dtype=numpy.float)
+
+
