@@ -352,7 +352,7 @@ class FileBlock:
                     oned_idx = 0
                     try:
                         try:
-                            dataline = map(float, sline.strip().split())
+                            dataline = list(map(float, sline.strip().split()))
                         except:
                             self.wrongLine(lineno, sline, "wrong data line")
                             continue
@@ -936,7 +936,7 @@ class McaData:
         self.calib = calib
 
     def getData(self):
-        channels = range(len(self.data))
+        channels = list(range(len(self.data)))
         if self.data:
             return numpy.array([channels, self.data], dtype=numpy.float).transpose()
         else:
@@ -950,7 +950,7 @@ class McaData:
             dataline = line
             complete = True
 
-        self.data.extend(map(float, dataline.split()))
+        self.data.extend(list(map(float, dataline.split())))
         return complete
 
 
